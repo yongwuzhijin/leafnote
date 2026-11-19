@@ -1,7 +1,8 @@
-import { mkdtemp, readFile, readdir, stat, writeFile } from 'node:fs/promises'
+import { lstat, mkdtemp, readFile, readdir, stat, symlink, writeFile } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { describe, expect, it } from 'vitest'
+import { canonicalizeDialogPath } from './dialog-path'
 import { createHandlers } from './ipc-handlers'
 import { isAllowedAppUrl, windowSecurityOptions } from './navigation'
 import { writeFileAtomic } from './write-file-atomic'
@@ -78,5 +79,79 @@ describe('ipc boundary', () => {
       })
       expect(again.status).toBe('ok')
     }
+  })
+
+  it('imports only the image chosen by the immediately preceding pick', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'leafnote-pick-'))
+    const documentPath = join(dir, 'a.md')
+    const chosen = join(dir, 'shot.png')
+    const other = join(dir, 'secret.png')
+    await writeFile(documentPath, '# a\n')
+    await writeFile(chosen, 'png')
+    await writeFile(other, 'no')
+    const copied: string[] = []
+    const handlers = createHandlers({
+      showOpen: async () => documentPath,
+      showSave: async () => null,
+      readFile: async (path) => new Uint8Array(await readFile(path)),
+      statFile: async (path) => {
+        const info = await stat(path)
+        return { mtimeMs: info.mtimeMs, size: info.size, isFile: info.isFile() }
+      },
+      writeAtomic: writeFileAtomic,
+      confirm: async () => 'cancel',
+      writeClipboard: async () => {},
+      pickImagePath: async () => chosen,
+      copyIntoDirectory: async (_documentPath, sourcePath) => {
+        copied.push(sourcePath)
+        return 'shot.png'
+      },
+      readImageBytes: async () => null
+    })
+    await handlers.openDocument()
+    expect(await handlers.importImage({ documentPath, sourcePath: other })).toEqual({ status: 'denied' })
+    expect(await handlers.pickImage()).toMatchObject({ status: 'ok', sourcePath: chosen })
+    expect(await handlers.importImage({ documentPath, sourcePath: other })).toEqual({ status: 'denied' })
+    expect(await handlers.importImage({ documentPath, sourcePath: chosen })).toEqual({ status: 'ok', relativeName: 'shot.png' })
+    expect(copied).toEqual([chosen])
+    expect(await handlers.importImage({ documentPath, sourcePath: chosen })).toEqual({ status: 'denied' })
+  })
+
+  it('writes through a symlinked document instead of replacing the link', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'leafnote-link-'))
+    const real = join(dir, 'real.md')
+    const link = join(dir, 'link.md')
+    await writeFile(real, 'old')
+    await symlink(real, link)
+    const handlers = createHandlers({
+      showOpen: async () => link,
+      showSave: async () => null,
+      readFile: async (path) => new Uint8Array(await readFile(path)),
+      statFile: async (path) => {
+        const info = await stat(path)
+        return { mtimeMs: info.mtimeMs, size: info.size, isFile: info.isFile() }
+      },
+      writeAtomic: writeFileAtomic,
+      confirm: async () => 'cancel',
+      writeClipboard: async () => {},
+      pickImagePath: async () => null,
+      copyIntoDirectory: async () => null,
+      readImageBytes: async () => null
+    })
+    const opened = await handlers.openDocument()
+    expect(opened).toMatchObject({ status: 'ok', path: await canonicalizeDialogPath(link) })
+    if (opened.status !== 'ok') {
+      return
+    }
+    const saved = await handlers.saveDocument({
+      path: opened.path,
+      content: 'new',
+      stamp: opened.stamp,
+      overwrite: true,
+      bom: false
+    })
+    expect(saved.status).toBe('ok')
+    expect(await readFile(real, 'utf8')).toBe('new')
+    expect((await lstat(link)).isSymbolicLink()).toBe(true)
   })
 })

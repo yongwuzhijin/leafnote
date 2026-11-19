@@ -7,6 +7,7 @@ import type {
   SaveDocumentInput,
   SaveDocumentResult
 } from '../shared/leafnote-api'
+import { canonicalizeDialogPath, sameRealPath } from './dialog-path'
 import { encodeUtf8Document, inspectOpen, planWrite } from './document-io'
 import { createGrantTable } from './grant-table'
 import { resolveLocalImage, sanitizeSvg } from './image-io'
@@ -44,14 +45,16 @@ export function createHandlers(deps: HandlerDeps): {
   writeClipboard: (text: string) => Promise<void>
   confirmDiscard: () => Promise<CloseChoice>
 } {
-  const grants = createGrantTable()
+const grants = createGrantTable()
   const lastBytes = new Map<string, Uint8Array>()
+  let pendingImagePath: string | null = null
 
   async function openPath(path: string): Promise<OpenDocumentResult> {
-      try {
-        const [bytes, stat] = await Promise.all([deps.readFile(path), deps.statFile(path)])
+    const canonical = await canonicalizeDialogPath(path)
+    try {
+      const [bytes, stat] = await Promise.all([deps.readFile(canonical), deps.statFile(canonical)])
         const opened = inspectOpen({
-          absolutePath: path,
+          absolutePath: canonical,
           bytes,
           isFile: stat.isFile,
           stamp: { mtimeMs: stat.mtimeMs, size: stat.size }
@@ -102,23 +105,31 @@ export function createHandlers(deps: HandlerDeps): {
       return commitBytes(deps, grants, lastBytes, input.path, plan.bytes)
     },
     async saveDocumentAs(input) {
-      const path = await deps.showSave()
-      if (!path) {
+      const selected = await deps.showSave()
+      if (!selected) {
         return { status: 'canceled' }
       }
+      const path = await canonicalizeDialogPath(selected)
       return commitBytes(deps, grants, lastBytes, path, encodeUtf8Document(input.content, input.bom))
     },
     async pickImage() {
       const sourcePath = await deps.pickImagePath()
       if (!sourcePath) {
+        pendingImagePath = null
         return { status: 'canceled' }
       }
+      pendingImagePath = sourcePath
       return { status: 'ok', sourcePath }
     },
     async importImage(input) {
-      if (!grants.has(input.documentPath)) {
+      if (!grants.has(input.documentPath) || !pendingImagePath) {
         return { status: 'denied' }
       }
+      const allowed = await sameRealPath(pendingImagePath, input.sourcePath)
+      if (!allowed) {
+        return { status: 'denied' }
+      }
+      pendingImagePath = null
       const relativeName = await deps.copyIntoDirectory(input.documentPath, input.sourcePath)
       if (!relativeName || relativeName.split(/[\\/]/).some((part) => part === '' || part === '.' || part === '..')) {
         return { status: 'denied' }

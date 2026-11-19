@@ -24,7 +24,7 @@ export type ImportImageResult = { status: 'ok'; relativeName: string } | { statu
 
 export type PickImageResult = { status: 'canceled' } | { status: 'ok'; sourcePath: string }
 
-export type MenuCommand = 'open' | 'save' | 'save-as' | 'close' | 'find'
+export type MenuCommand = 'new' | 'open' | 'save' | 'save-as' | 'close' | 'find'
 
 export type SaveDocumentInput = {
   path: string

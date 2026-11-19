@@ -27,4 +27,20 @@ describe('release contract', () => {
     expect(joined).not.toContain('DmonWork')
     expect(joined).not.toContain('6CX3WHS9HZ')
   })
+
+  it('keeps electron in devDependencies so unsigned packaging can start', () => {
+    const pkg = JSON.parse(readFileSync('package.json', 'utf8')) as {
+      dependencies: Record<string, string>
+      devDependencies: Record<string, string>
+    }
+    expect(pkg.dependencies.electron).toBeUndefined()
+    expect(pkg.devDependencies.electron).toBe('43.7.5')
+  })
+
+  it('does not ship a screenshot debugger in the main process', () => {
+    const main = readFileSync('src/main/index.ts', 'utf8')
+    expect(main).not.toContain('LEAFNOTE_SCREENSHOT')
+    expect(main).not.toContain('debugger.attach')
+    expect(main).not.toContain('executeJavaScript')
+  })
 })

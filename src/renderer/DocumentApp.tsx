@@ -8,6 +8,8 @@ import { chooseLocale, type LeafNoteLocale } from '../shared/locale'
 import { message } from '../shared/messages'
 import { EditorShell } from './EditorShell'
 import { isDirty, openSession, withMode, type DocumentSession } from './document-session'
+import { createNewDocument } from './new-document'
+import { editedCanonicalForSave } from './preview-save'
 import { bindStartupOpen } from './startup-open'
 import './leafnote-window'
 
@@ -88,7 +90,7 @@ export function DocumentApp() {
     if (!current) {
       return false
     }
-    const edited = readLiveMarkdown()
+    const edited = editedCanonicalForSave(editorRef.current, draftRef.current)
     const assembled = assembleSaveText({
       original: current.baseline,
       surface: current.surface,
@@ -159,7 +161,7 @@ export function DocumentApp() {
     if (!current) {
       return false
     }
-    const edited = readLiveMarkdown()
+    const edited = editedCanonicalForSave(editorRef.current, draftRef.current)
     const assembled = assembleSaveText({
       original: current.baseline,
       surface: current.surface,
@@ -222,22 +224,30 @@ export function DocumentApp() {
     editorRef.current?.chain().focus().insertContent(`![](${imported.relativeName})`).run()
   }
 
-  function readLiveMarkdown(): string | null {
-    const editor = editorRef.current
-    if (!editor) {
-      return canonicalBody.current
+  async function startNew() {
+    const current = sessionRef.current
+    if (current && isDirty(current, draftRef.current)) {
+      const closed = await settleClose('stay-open')
+      if (!closed) {
+        return
+      }
     }
-    if (editor.isDestroyed) {
-      return null
-    }
-    try {
-      return editor.getMarkdown()
-    } catch {
-      return null
-    }
+    const next = createNewDocument(htmlRoundTripOk)
+    editorRef.current = null
+    baseCanonical.current = ''
+    canonicalBody.current = ''
+    setSession(next)
+    setDraft('')
+    setStamp(null)
+    setGeneration((value) => value + 1)
+    setNotice(null)
   }
 
   async function runMenu(command: MenuCommand) {
+    if (command === 'new') {
+      await startNew()
+      return
+    }
     if (command === 'open') {
       await openDocument()
       return
@@ -262,6 +272,9 @@ export function DocumentApp() {
       <header className="titlebar">
         <strong>叶笺</strong>
         <span>LeafNote</span>
+        <button type="button" onClick={() => void startNew()}>
+          {message(locale, 'new')}
+        </button>
         <button type="button" onClick={() => void openDocument()}>
           {message(locale, 'open')}
         </button>
@@ -297,7 +310,7 @@ export function DocumentApp() {
           onClose={() => void settleClose('close')}
         />
       ) : (
-        <EmptyState locale={locale} onOpen={() => void openDocument()} />
+        <EmptyState locale={locale} onNew={() => void startNew()} onOpen={() => void openDocument()} />
       )}
       {overwrite ? (
         <div className="modal" role="dialog" aria-modal="true">
@@ -320,11 +333,14 @@ export function DocumentApp() {
   )
 }
 
-function EmptyState(props: { locale: LeafNoteLocale; onOpen(): void }) {
+function EmptyState(props: { locale: LeafNoteLocale; onNew(): void; onOpen(): void }) {
   return (
     <section className="empty">
       <h1>叶笺</h1>
       <p>{message(props.locale, 'empty-hint')}</p>
+      <button type="button" onClick={props.onNew}>
+        {message(props.locale, 'new')}
+      </button>
       <button type="button" onClick={props.onOpen}>
         {message(props.locale, 'open')}
       </button>

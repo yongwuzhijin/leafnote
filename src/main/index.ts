@@ -1,4 +1,4 @@
-import { readFile, stat, writeFile } from 'node:fs/promises'
+import { readFile, stat } from 'node:fs/promises'
 import { extname, join, normalize, sep } from 'node:path'
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, protocol, shell } from 'electron'
 import type { MenuCommand, OpenDocumentResult } from '../shared/leafnote-api'
@@ -6,6 +6,7 @@ import { chooseLocale } from '../shared/locale'
 import { message } from '../shared/messages'
 import { copyImageIntoDocument, readDocumentImage } from './image-files'
 import { createHandlers, type HandlerDeps } from './ipc-handlers'
+import { createMenuDispatcher } from './menu-target'
 import { applyWindowGuards, APP_ORIGIN, webPreferences } from './window-host'
 import { writeFileAtomic } from './write-file-atomic'
 
@@ -27,31 +28,6 @@ protocol.registerSchemesAsPrivileged([
 const handlersByWebContents = new Map<number, ReturnType<typeof createHandlers>>()
 const closing = new Set<number>()
 const pendingPaths: string[] = []
-
-async function captureEditorAndPreview(win: BrowserWindow, editPath: string): Promise<void> {
-  const previewPath = editPath.replace(/\.png$/i, '-preview.png')
-  try {
-    await captureWindow(win, editPath)
-    const mode = await win.webContents.executeJavaScript(
-      `(() => { const button = [...document.querySelectorAll('button')].find((item) => ['预览', 'Preview'].includes(item.textContent.trim())); button?.click(); return button ? button.textContent.trim() : 'missing'; })()`
-    )
-    console.error('preview click', mode)
-    await new Promise((resolve) => setTimeout(resolve, 500))
-    await captureWindow(win, previewPath)
-  } catch (error) {
-    console.error('screenshot failed', error)
-  }
-}
-
-async function captureWindow(win: BrowserWindow, file: string): Promise<void> {
-  const dbg = win.webContents.debugger
-  if (!dbg.isAttached()) {
-    dbg.attach('1.3')
-  }
-  const shot = (await dbg.sendCommand('Page.captureScreenshot', { format: 'png' })) as { data: string }
-  await writeFile(file, Buffer.from(shot.data, 'base64'))
-  console.error('screenshot written', file)
-}
 
 function locale() {
   return chooseLocale(app.getLocale())
@@ -105,18 +81,28 @@ function dependencies(win: BrowserWindow): HandlerDeps {
   }
 }
 
-function installMenu(win: BrowserWindow): void {
+function installMenu(): void {
   const current = locale()
-  const send = (command: MenuCommand) => {
-    if (!win.isDestroyed()) {
-      win.webContents.send('menu-command', command)
+  const dispatch = createMenuDispatcher(() => {
+    const win = BrowserWindow.getFocusedWindow()
+    if (!win) {
+      return null
     }
-  }
+    return {
+      id: win.id,
+      destroyed: win.isDestroyed(),
+      send: (command) => {
+        win.webContents.send('menu-command', command)
+      }
+    }
+  })
+  const send = (command: MenuCommand) => dispatch(command)
   Menu.setApplicationMenu(
     Menu.buildFromTemplate([
       {
         label: '叶笺',
         submenu: [
+          { label: message(current, 'new'), accelerator: 'CmdOrCtrl+N', click: () => send('new') },
           { label: message(current, 'open'), accelerator: 'CmdOrCtrl+O', click: () => send('open') },
           { label: message(current, 'save'), accelerator: 'CmdOrCtrl+S', click: () => send('save') },
           { label: message(current, 'save-as'), accelerator: 'CmdOrCtrl+Shift+S', click: () => send('save-as') },
@@ -156,7 +142,6 @@ function createWindow(initialPath?: string): BrowserWindow {
   applyWindowGuards(win, (url) => {
     void shell.openExternal(url)
   })
-  installMenu(win)
   win.on('close', (event) => {
     if (closing.has(win.webContents.id)) {
       return
@@ -180,11 +165,6 @@ function createWindow(initialPath?: string): BrowserWindow {
           }
         })
       }, 400)
-    }
-    if (process.env.LEAFNOTE_SCREENSHOT) {
-      setTimeout(() => {
-        void captureEditorAndPreview(win, process.env.LEAFNOTE_SCREENSHOT!).finally(() => app.exit(0))
-      }, 1800)
     }
   })
   void win.loadURL(`${APP_ORIGIN}/index.html`)
@@ -273,6 +253,7 @@ app.on('open-file', (event, filePath) => {
 void app.whenReady().then(() => {
   protocol.handle('app', (request) => serveApp(request))
   registerIpc()
+  installMenu()
   const paths = [...pendingPaths, ...markdownArguments()]
   pendingPaths.length = 0
   if (paths.length === 0) {
