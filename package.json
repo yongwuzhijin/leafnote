@@ -42,6 +42,7 @@
     "diff": "8.0.4",
     "dompurify": "3.4.16",
     "electron": "43.7.5",
+    "jsdom": "31.0.1",
     "katex": "0.16.47",
     "lowlight": "3.3.0",
     "marked": "17.0.1",
@@ -60,7 +61,11 @@
     "remark-math": "6.0.0"
   },
   "pnpm": {
-    "onlyBuiltDependencies": ["electron", "esbuild", "electron-winstaller"]
+    "onlyBuiltDependencies": [
+      "electron",
+      "esbuild",
+      "electron-winstaller"
+    ]
   },
   "devDependencies": {
     "@testing-library/react": "16.3.3",
