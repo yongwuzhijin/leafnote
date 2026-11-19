@@ -19,7 +19,7 @@ pnpm run build
 pnpm run package:mac
 ```
 
-Linux 不能为 macOS 应用签名或公证，也不能代替 macOS 产出可安装的 dmg。签名和公证只在 GitHub Actions 的 `macos-14` 上执行。
+Linux 不能为 macOS 应用签名或公证，也不能代替 macOS 产出可安装的 dmg。签名和公证在 GitHub Actions 的 `macos-15` 上执行。GitHub 已在 2026-11-02 停用 `macos-14`，请求该镜像会在启动前被取消。
 
 ## 签名
 

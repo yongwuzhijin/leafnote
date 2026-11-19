@@ -8,7 +8,7 @@ on:
 
 jobs:
   package:
-    runs-on: macos-14
+    runs-on: macos-15
     strategy:
       fail-fast: false
       matrix:
@@ -58,7 +58,7 @@ jobs:
 
   smoke:
     if: github.event_name == 'workflow_dispatch'
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - run: |
           echo "人工烟雾检查未执行，不能记为通过。"
