@@ -108,13 +108,18 @@ describe('ipc boundary', () => {
       },
       readImageBytes: async () => null
     })
-    await handlers.openDocument()
-    expect(await handlers.importImage({ documentPath, sourcePath: other })).toEqual({ status: 'denied' })
+    const opened = await handlers.openDocument()
+    expect(opened.status).toBe('ok')
+    if (opened.status !== 'ok') {
+      return
+    }
+    const granted = opened.path
+    expect(await handlers.importImage({ documentPath: granted, sourcePath: other })).toEqual({ status: 'denied' })
     expect(await handlers.pickImage()).toMatchObject({ status: 'ok', sourcePath: chosen })
-    expect(await handlers.importImage({ documentPath, sourcePath: other })).toEqual({ status: 'denied' })
-    expect(await handlers.importImage({ documentPath, sourcePath: chosen })).toEqual({ status: 'ok', relativeName: 'shot.png' })
+    expect(await handlers.importImage({ documentPath: granted, sourcePath: other })).toEqual({ status: 'denied' })
+    expect(await handlers.importImage({ documentPath: granted, sourcePath: chosen })).toEqual({ status: 'ok', relativeName: 'shot.png' })
     expect(copied).toEqual([chosen])
-    expect(await handlers.importImage({ documentPath, sourcePath: chosen })).toEqual({ status: 'denied' })
+    expect(await handlers.importImage({ documentPath: granted, sourcePath: chosen })).toEqual({ status: 'denied' })
   })
 
   it('writes through a symlinked document instead of replacing the link', async () => {
