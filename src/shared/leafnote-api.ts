@@ -24,6 +24,8 @@ export type ImportImageResult = { status: 'ok'; relativeName: string } | { statu
 
 export type PickImageResult = { status: 'canceled' } | { status: 'ok'; sourcePath: string }
 
+export type MenuCommand = 'open' | 'save' | 'save-as' | 'close' | 'find'
+
 export type SaveDocumentInput = {
   path: string
   content: string
@@ -41,5 +43,7 @@ export type LeafNoteApi = {
   readImage(input: { documentPath: string; src: string }): Promise<ImageReadResult>
   writeClipboard(text: string): Promise<void>
   confirmDiscard(): Promise<CloseChoice>
+  closeWindow(): Promise<void>
   onOpenFromOs(callback: (result: OpenDocumentResult) => void): () => void
+  onMenuCommand(callback: (command: MenuCommand) => void): () => void
 }

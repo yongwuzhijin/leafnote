@@ -11,8 +11,14 @@ import remarkCjkFriendly from 'remark-cjk-friendly/parseOnly'
 import remarkFrontmatter from 'remark-frontmatter'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
-import type { Blockquote, Nodes, Root } from 'mdast'
 import { MARKDOWN_PREVIEW_MAX_BYTES } from '../shared/limits'
+
+type MarkdownNode = {
+  type: string
+  value?: string
+  children?: MarkdownNode[]
+  data?: { hProperties?: Record<string, unknown> }
+}
 
 const CALLOUT_KINDS = ['note', 'tip', 'important', 'warning', 'caution'] as const
 const CALLOUT_MARKER = /^\[!([a-z]+)\](?:\r?\n|$)/i
@@ -75,28 +81,27 @@ export function renderPreview(markdown: string): { status: 'ok'; html: string } 
   return { status: 'ok', html }
 }
 
-function remarkLeafNoteCallouts(): (tree: Root) => void {
+function remarkLeafNoteCallouts(): (tree: MarkdownNode) => void {
   return (tree) => {
     visit(tree)
   }
 }
 
-function visit(node: Nodes): void {
-  if ('children' in node) {
-    node.children.forEach(visit)
+function visit(node: MarkdownNode): void {
+  for (const child of node.children ?? []) {
+    visit(child)
   }
   if (node.type === 'blockquote') {
     markCallout(node)
   }
 }
 
-function markCallout(node: Blockquote): void {
-  const paragraph = node.children[0]
-  if (paragraph?.type !== 'paragraph') {
-    return
-  }
-  const text = paragraph.children[0]
-  if (text?.type !== 'text') {
+function markCallout(node: MarkdownNode): void {
+  const children = node.children ?? []
+  const paragraph = children[0]
+  const paragraphChildren = paragraph?.children ?? []
+  const text = paragraphChildren[0]
+  if (paragraph?.type !== 'paragraph' || text?.type !== 'text' || text.value === undefined) {
     return
   }
   const match = CALLOUT_MARKER.exec(text.value)
@@ -107,10 +112,10 @@ function markCallout(node: Blockquote): void {
   const remainder = text.value.slice(match[0].length)
   if (remainder) {
     text.value = remainder
-  } else if (match[0].endsWith('\n') || paragraph.children.length === 1) {
-    paragraph.children.shift()
-    if (paragraph.children.length === 0) {
-      node.children.shift()
+  } else if (match[0].endsWith('\n') || paragraphChildren.length === 1) {
+    paragraphChildren.shift()
+    if (paragraphChildren.length === 0) {
+      children.shift()
     }
   } else {
     return

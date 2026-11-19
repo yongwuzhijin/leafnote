@@ -35,6 +35,7 @@ export type MessageKey =
   | 'read-only-preview'
   | 'empty-hint'
   | 'slash-placeholder'
+  | 'save-prompt'
 
 const zh: Record<MessageKey, string> = {
   'unsupported-html': '含 HTML、JSX 或 MDX',
@@ -70,7 +71,8 @@ const zh: Record<MessageKey, string> = {
   'front-matter': '文首信息',
   'read-only-preview': '预览只读',
   'empty-hint': '打开本地 Markdown，或先存储一份新文档。',
-  'slash-placeholder': '写 Markdown… 输入 / 插入块'
+  'slash-placeholder': '写 Markdown… 输入 / 插入块',
+  'save-prompt': '要存储对文档的修改吗？'
 }
 
 const en: Record<MessageKey, string> = {
@@ -107,7 +109,8 @@ const en: Record<MessageKey, string> = {
   'front-matter': 'Front matter',
   'read-only-preview': 'Preview is read-only',
   'empty-hint': 'Open a local Markdown file, or save a new document first.',
-  'slash-placeholder': 'Write Markdown… type / for blocks'
+  'slash-placeholder': 'Write Markdown… type / for blocks',
+  'save-prompt': 'Save changes to this document?'
 }
 
 const catalogs: Record<LeafNoteLocale, Record<MessageKey, string>> = { zh, en }

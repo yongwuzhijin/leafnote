@@ -35,6 +35,7 @@ export type HandlerDeps = {
 
 export function createHandlers(deps: HandlerDeps): {
   openDocument: () => Promise<OpenDocumentResult>
+  openPath: (path: string) => Promise<OpenDocumentResult>
   saveDocument: (input: SaveDocumentInput) => Promise<SaveDocumentResult>
   saveDocumentAs: (input: { content: string; bom: boolean }) => Promise<SaveDocumentResult>
   pickImage: () => Promise<PickImageResult>
@@ -46,12 +47,7 @@ export function createHandlers(deps: HandlerDeps): {
   const grants = createGrantTable()
   const lastBytes = new Map<string, Uint8Array>()
 
-  return {
-    async openDocument() {
-      const path = await deps.showOpen()
-      if (!path) {
-        return { status: 'canceled' }
-      }
+  async function openPath(path: string): Promise<OpenDocumentResult> {
       try {
         const [bytes, stat] = await Promise.all([deps.readFile(path), deps.statFile(path)])
         const opened = inspectOpen({
@@ -68,6 +64,16 @@ export function createHandlers(deps: HandlerDeps): {
       } catch {
         return { status: 'error', reason: 'not-file' }
       }
+    }
+
+  return {
+    openPath,
+    async openDocument() {
+      const path = await deps.showOpen()
+      if (!path) {
+        return { status: 'canceled' }
+      }
+      return openPath(path)
     },
     async saveDocument(input) {
       if (!grants.has(input.path)) {

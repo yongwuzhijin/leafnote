@@ -1,3 +1,4 @@
+import type { Editor } from '@tiptap/core'
 import { EditorContent, useEditor } from '@tiptap/react'
 import { useEffect, useRef } from 'react'
 import { createLeafNoteExtensions, runSlashCommand, type LeafNoteSlashId } from '../editor/create-leafnote-extensions'
@@ -28,9 +29,12 @@ export function RichEditor(props: {
   readImage: LeafNoteImageReader
   onPickImage(): void
   onChange(markdownBody: string): void
+  onReady?(editor: Editor): void
 }) {
   const onChange = useRef(props.onChange)
   onChange.current = props.onChange
+  const onReady = useRef(props.onReady)
+  onReady.current = props.onReady
   const editor = useEditor({
     extensions: createLeafNoteExtensions({
       readImage: props.readImage,
@@ -48,14 +52,10 @@ export function RichEditor(props: {
   })
 
   useEffect(() => {
-    if (!editor) {
-      return
+    if (editor) {
+      onReady.current?.(editor)
     }
-    const current = editor.getMarkdown()
-    if (current !== props.body && !editor.isFocused) {
-      editor.commands.setContent(props.body, { contentType: 'markdown', emitUpdate: false })
-    }
-  }, [editor, props.body])
+  }, [editor])
 
   return (
     <div className="rich-editor">

@@ -49,7 +49,7 @@ function readSourceDocument(
   }
   const blocks: SourceBlock[] = []
   let leading = ''
-  const lastContentIndex = tokens.findLastIndex((token) => token.type !== 'space')
+  const lastContentIndex = tokens.findLastIndex((token: { type?: string }) => token.type !== 'space')
   for (const [tokenIndex, token] of tokens.entries()) {
     const raw = token.raw
     if (raw === undefined) {

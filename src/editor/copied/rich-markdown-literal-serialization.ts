@@ -94,7 +94,7 @@ export function preserveLiteralMarkdownSource(
       return markdown
     }
     blocks = new Map()
-    json.content?.forEach((node, index) => {
+    json.content?.forEach((node: { type?: string }, index: number) => {
       if (node.type && LITERAL_BLOCK_TYPES.has(node.type)) {
         blocks!.set(node, document.child(index))
       }

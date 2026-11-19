@@ -24,6 +24,8 @@ export function EditorShell(props: {
   notice?: string | null
   readImage?: LeafNoteImageReader
   onInsertImage?: () => void
+  onReady?: (editor: import('@tiptap/core').Editor) => void
+  onCanonicalBody?: (body: string) => void
   onChange(text: string): void
   onMode(mode: 'edit' | 'preview'): void
   onClose(choice: CloseChoice | null): void
@@ -66,6 +68,7 @@ export function EditorShell(props: {
       <label className="find-row">
         {message(props.locale, 'find')}
         <input
+          id="leafnote-find"
           role="searchbox"
           value={query}
           aria-label={message(props.locale, 'find')}
@@ -90,7 +93,9 @@ export function EditorShell(props: {
           placeholder={message(props.locale, 'slash-placeholder')}
           readImage={props.readImage ?? (async () => ({ status: 'denied' }))}
           onPickImage={props.onInsertImage ?? (() => undefined)}
+          onReady={props.onReady}
           onChange={(body) => {
+            props.onCanonicalBody?.(body)
             const next = frontMatter ? prependFrontMatter(frontMatter.raw, body) : body
             publish(next)
           }}
