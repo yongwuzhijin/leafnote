@@ -5,6 +5,7 @@ import type { CloseChoice } from '../shared/leafnote-api'
 import type { LeafNoteLocale } from '../shared/locale'
 import { message, type MessageKey } from '../shared/messages'
 import { commandHint } from '../shared/shortcuts'
+import { Tooltip } from './Tooltip'
 import type { DocumentSession } from './document-session'
 import { findInDocument } from './find-in-document'
 import { FrontMatterBlock } from './FrontMatterBlock'
@@ -61,24 +62,16 @@ export function EditorShell(props: {
     <section className="editor-shell">
       <header className="editor-header">
         <div className="editor-view-toggle" role="group" aria-label={message(props.locale, 'edit')}>
-          <button
-            type="button"
-            aria-pressed={props.session.mode === 'edit'}
-            aria-label={message(props.locale, 'edit')}
-            title={commandHint(message(props.locale, 'edit'), 'toggle-preview')}
-            onClick={() => props.onMode('edit')}
-          >
-            <Pencil size={13} />
-          </button>
-          <button
-            type="button"
-            aria-pressed={props.session.mode === 'preview'}
-            aria-label={message(props.locale, 'preview')}
-            title={commandHint(message(props.locale, 'preview'), 'toggle-preview')}
-            onClick={() => props.onMode('preview')}
-          >
-            <Eye size={13} />
-          </button>
+          <Tooltip label={commandHint(message(props.locale, 'edit'), 'toggle-preview')}>
+            <button type="button" aria-pressed={props.session.mode === 'edit'} aria-label={message(props.locale, 'edit')} onClick={() => props.onMode('edit')}>
+              <Pencil size={13} />
+            </button>
+          </Tooltip>
+          <Tooltip label={commandHint(message(props.locale, 'preview'), 'toggle-preview')}>
+            <button type="button" aria-pressed={props.session.mode === 'preview'} aria-label={message(props.locale, 'preview')} onClick={() => props.onMode('preview')}>
+              <Eye size={13} />
+            </button>
+          </Tooltip>
         </div>
         <div className="editor-header-text">
           <div className="editor-header-path editor-header-path--static">
@@ -91,15 +84,11 @@ export function EditorShell(props: {
             {message(props.locale, 'unsaved')}
           </span>
         ) : null}
-        <button
-          type="button"
-          className="titlebar-icon-button titlebar-action"
-          aria-label={message(props.locale, 'close')}
-          title={commandHint(message(props.locale, 'close'), 'close')}
-          onClick={() => props.onClose(null)}
-        >
-          <X size={16} />
-        </button>
+        <Tooltip label={commandHint(message(props.locale, 'close'), 'close')}>
+          <button type="button" className="titlebar-icon-button titlebar-action" aria-label={message(props.locale, 'close')} onClick={() => props.onClose(null)}>
+            <X size={16} />
+          </button>
+        </Tooltip>
       </header>
       {props.session.reason ? <p className="banner">{message(props.locale, reasonKey[props.session.reason])}</p> : null}
       {props.notice ? <p className="notice">{props.notice}</p> : null}

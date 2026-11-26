@@ -1,4 +1,5 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { TOOLTIP_DELAY_MS } from './Tooltip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { EditorShell } from './EditorShell'
 
@@ -46,8 +47,18 @@ describe('EditorShell', () => {
     if (!close) {
       throw new Error('missing close button')
     }
-    expect(close.getAttribute('title')).toBe('关闭（⌘W）')
+    expect(close.getAttribute('title')).toBeNull()
+    expect(close.getAttribute('aria-label')).toBe('关闭')
     expect(close.textContent?.trim()).toBe('')
+    vi.useFakeTimers()
+    fireEvent.mouseEnter(close.parentElement!)
+    act(() => {
+      vi.advanceTimersByTime(TOOLTIP_DELAY_MS)
+    })
+    expect(screen.getByRole('tooltip').textContent).toBe('关闭（⌘W）')
+    fireEvent.mouseLeave(close.parentElement!)
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    vi.useRealTimers()
     fireEvent.click(close)
     expect(onClose).toHaveBeenCalledOnce()
   })

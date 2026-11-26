@@ -20,6 +20,7 @@ import {
 } from 'lucide-react'
 import { runSlashCommand, type LeafNoteSlashId } from '../editor/create-leafnote-extensions'
 import type { LeafNoteLocale } from '../shared/locale'
+import { Tooltip } from './Tooltip'
 
 export type SlashMenuState = { query: string; from: number; to: number; left: number; top: number }
 
@@ -139,11 +140,11 @@ export function SlashMenu(props: {
             return (
               <div key={entry.id}>
                 {showGroup ? <div className="rich-markdown-slash-section">{entry.group}</div> : null}
+                <Tooltip label={entry.description}>
                 <button
                   type="button"
                   role="option"
                   aria-selected={index === props.selectedIndex}
-                  title={entry.description}
                   className={index === props.selectedIndex ? 'rich-markdown-slash-item is-active' : 'rich-markdown-slash-item'}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => props.onPick(entry)}
@@ -153,6 +154,7 @@ export function SlashMenu(props: {
                   </span>
                   {entry.label}
                 </button>
+                </Tooltip>
               </div>
             )
           })

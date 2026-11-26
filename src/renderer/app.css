@@ -99,6 +99,42 @@ button {
   align-items: center;
 }
 
+.leaf-tooltip-anchor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-view-toggle .leaf-tooltip-anchor {
+  display: flex;
+}
+
+.rich-markdown-slash-results .leaf-tooltip-anchor,
+.rich-markdown-more-menu .leaf-tooltip-anchor {
+  display: flex;
+  width: 100%;
+}
+
+.rich-markdown-slash-results .leaf-tooltip-anchor > button,
+.rich-markdown-more-menu .leaf-tooltip-anchor > button {
+  width: 100%;
+}
+
+.leaf-tooltip {
+  position: fixed;
+  z-index: 80;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 16px rgba(10, 10, 10, 0.16);
+}
+
 .titlebar-icon-button {
   display: inline-flex;
   align-items: center;

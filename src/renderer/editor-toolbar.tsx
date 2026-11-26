@@ -18,6 +18,7 @@ import {
 import { useState, type ReactNode } from 'react'
 import { insertToggle } from '../editor/create-leafnote-extensions'
 import type { LeafNoteLocale } from '../shared/locale'
+import { Tooltip } from './Tooltip'
 
 function label(locale: LeafNoteLocale, zh: string, en: string): string {
   return locale === 'zh' ? zh : en
@@ -25,16 +26,17 @@ function label(locale: LeafNoteLocale, zh: string, en: string): string {
 
 function ToolbarButton(props: { label: string; onClick(): void; children: ReactNode }) {
   return (
-    <button
-      type="button"
-      className="rich-markdown-toolbar-button"
-      aria-label={props.label}
-      title={props.label}
-      onMouseDown={(event) => event.preventDefault()}
-      onClick={props.onClick}
-    >
-      {props.children}
-    </button>
+    <Tooltip label={props.label}>
+      <button
+        type="button"
+        className="rich-markdown-toolbar-button"
+        aria-label={props.label}
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={props.onClick}
+      >
+        {props.children}
+      </button>
+    </Tooltip>
   )
 }
 

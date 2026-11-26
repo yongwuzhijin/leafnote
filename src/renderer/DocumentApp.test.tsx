@@ -1,4 +1,5 @@
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { TOOLTIP_DELAY_MS } from './Tooltip'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import leafLogo from '../../build/icon.png'
 import type { LeafNoteApi, MenuCommand } from '../shared/leafnote-api'
@@ -63,7 +64,7 @@ describe('DocumentApp chrome', () => {
     render(<DocumentApp />)
     for (const key of ['new', 'open', 'save', 'save-as'] as const) {
       const button = titleAction(label(key))
-      expect(button.title).toBe(commandHint(label(key), key))
+      expect(button.getAttribute('title')).toBeNull()
       expect(button.getAttribute('aria-label')).toBe(label(key))
       expect(button.textContent?.trim()).toBe('')
     }
@@ -87,5 +88,16 @@ describe('DocumentApp chrome', () => {
       api.menu('toggle-preview')
     })
     expect(screen.getByRole('button', { name: message(chooseLocale(navigator.language), 'preview'), pressed: true })).toBeTruthy()
+
+    vi.useFakeTimers()
+    const save = titleAction(label('save'))
+    fireEvent.mouseEnter(save.parentElement!)
+    act(() => {
+      vi.advanceTimersByTime(TOOLTIP_DELAY_MS)
+    })
+    expect(screen.getByRole('tooltip').textContent).toBe(commandHint(label('save'), 'save'))
+    fireEvent.mouseLeave(save.parentElement!)
+    expect(screen.queryByRole('tooltip')).toBeNull()
+    vi.useRealTimers()
   })
 })

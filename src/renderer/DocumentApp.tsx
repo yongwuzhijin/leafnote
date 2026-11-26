@@ -9,6 +9,7 @@ import type { FileStamp, MenuCommand, OpenDocumentResult } from '../shared/leafn
 import { chooseLocale, type LeafNoteLocale } from '../shared/locale'
 import { message } from '../shared/messages'
 import { commandHint } from '../shared/shortcuts'
+import { Tooltip } from './Tooltip'
 import { EditorShell } from './EditorShell'
 import { isDirty, openSession, withMode, type DocumentSession } from './document-session'
 import { createNewDocument } from './new-document'
@@ -353,16 +354,17 @@ export function DocumentApp() {
 
 function TitleAction(props: { label: string; hint?: string; disabled?: boolean; onClick(): void; children: ReactNode }) {
   return (
-    <button
-      type="button"
-      className="titlebar-icon-button titlebar-action"
-      title={props.hint ?? props.label}
-      aria-label={props.label}
-      disabled={props.disabled}
-      onClick={props.onClick}
-    >
-      {props.children}
-    </button>
+    <Tooltip label={props.hint ?? props.label}>
+      <button
+        type="button"
+        className="titlebar-icon-button titlebar-action"
+        aria-label={props.label}
+        disabled={props.disabled}
+        onClick={props.onClick}
+      >
+        {props.children}
+      </button>
+    </Tooltip>
   )
 }
 
