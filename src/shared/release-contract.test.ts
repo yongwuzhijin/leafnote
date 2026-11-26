@@ -37,6 +37,15 @@ describe('release contract', () => {
     expect(pkg.devDependencies.electron).toBe('43.7.5')
   })
 
+  it('uses the supplied macOS icon instead of the Electron default', () => {
+    const builder = readFileSync('electron-builder.yml', 'utf8')
+    const icon = readFileSync('build/icon.png')
+    expect(builder).toContain('icon: build/icon.png')
+    expect(icon.subarray(0, 8)).toEqual(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))
+    expect(icon.readUInt32BE(16)).toBe(1024)
+    expect(icon.readUInt32BE(20)).toBe(1024)
+  })
+
   it('does not ship a screenshot debugger in the main process', () => {
     const main = readFileSync('src/main/index.ts', 'utf8')
     expect(main).not.toContain('LEAFNOTE_SCREENSHOT')

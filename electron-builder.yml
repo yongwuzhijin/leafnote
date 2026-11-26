@@ -13,6 +13,7 @@ files:
 asar: true
 mac:
   category: public.app-category.productivity
+  icon: build/icon.png
   artifactName: LeafNote-macos-${arch}.${ext}
   entitlements: entitlements.mac.plist
   entitlementsInherit: entitlements.mac.plist
