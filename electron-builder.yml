@@ -1,0 +1,48 @@
+appId: app.leafnote.macos
+productName: 叶笺
+executableName: LeafNote
+directories:
+  output: release
+files:
+  - dist/**
+  - package.json
+  - node_modules/**/*
+  - "!node_modules/electron/**"
+  - "!node_modules/.pnpm/electron@*/**"
+  - "!**/*.{map,md,markdown}"
+asar: true
+mac:
+  category: public.app-category.productivity
+  icon: build/icon.png
+  artifactName: LeafNote-macos-${arch}.${ext}
+  entitlements: entitlements.mac.plist
+  entitlementsInherit: entitlements.mac.plist
+  hardenedRuntime: false
+  gatekeeperAssess: false
+  target:
+    - target: dmg
+      arch:
+        - arm64
+        - x64
+    - target: zip
+      arch:
+        - arm64
+        - x64
+  fileAssociations:
+    - ext: md
+      name: Markdown
+      role: Editor
+      rank: Alternate
+    - ext: markdown
+      name: Markdown
+      role: Editor
+      rank: Alternate
+    - ext: mdx
+      name: MDX
+      role: Editor
+      rank: Alternate
+# Artifact names produced on macOS:
+# LeafNote-macos-arm64.dmg
+# LeafNote-macos-arm64.zip
+# LeafNote-macos-x64.dmg
+# LeafNote-macos-x64.zip

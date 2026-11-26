@@ -1,0 +1,466 @@
+:root {
+  color-scheme: light;
+  --app-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Noto Sans CJK SC', sans-serif;
+  --font-sans: var(--app-font-family);
+  --font-mono: 'SF Mono', SFMono-Regular, ui-monospace, Menlo, Consolas, monospace;
+  --radius: 0.625rem;
+  --background: #fff;
+  --editor-surface: #ffffff;
+  --foreground: #0a0a0a;
+  --card: #fff;
+  --popover: #fff;
+  --popover-foreground: #0a0a0a;
+  --primary: #171717;
+  --primary-foreground: #fafafa;
+  --secondary: #f5f5f5;
+  --muted: #f5f5f5;
+  --muted-foreground: #737373;
+  --accent: #f5f5f5;
+  --accent-foreground: #171717;
+  --border: #e5e5e5;
+  --input: #e5e5e5;
+  --ring: #a1a1a1;
+  --destructive: #e40014;
+  --status-success: #15803d;
+  --status-warning: #ca8a04;
+  --callout-note: #0969da;
+  --callout-important: #8250df;
+  --annotation-highlight: #f59e0b;
+  --worktree-sidebar: #f5f5f5;
+  --editor-font-zoom-level: 0;
+}
+
+* { box-sizing: border-box; }
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 14px;
+}
+
+button, input, textarea, select {
+  font: inherit;
+  color: inherit;
+}
+
+button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.app {
+  height: 100%;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--background);
+}
+
+.titlebar {
+  height: 36px;
+  min-height: 36px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 8px 0 12px;
+  background: var(--card);
+  border-bottom: 1px solid var(--border);
+  user-select: none;
+}
+
+.titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.titlebar-app-name {
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.titlebar-product {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.titlebar-actions {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+}
+
+.leaf-tooltip-anchor {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.editor-view-toggle .leaf-tooltip-anchor {
+  display: flex;
+}
+
+.rich-markdown-slash-results .leaf-tooltip-anchor,
+.rich-markdown-more-menu .leaf-tooltip-anchor {
+  display: flex;
+  width: 100%;
+}
+
+.rich-markdown-slash-results .leaf-tooltip-anchor > button,
+.rich-markdown-more-menu .leaf-tooltip-anchor > button {
+  width: 100%;
+}
+
+.leaf-tooltip {
+  position: fixed;
+  z-index: 80;
+  max-width: min(280px, calc(100vw - 16px));
+  padding: 4px 8px;
+  border-radius: 6px;
+  background: var(--foreground);
+  color: var(--background);
+  font-size: 12px;
+  line-height: 1.4;
+  white-space: nowrap;
+  pointer-events: none;
+  box-shadow: 0 6px 16px rgba(10, 10, 10, 0.16);
+}
+
+.titlebar-icon-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 2px;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.titlebar-action {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+}
+
+.titlebar-icon-button:hover:not(:disabled) {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.titlebar-icon-button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.leaf-mark {
+  display: block;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.leaf-mark-bar {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.leaf-mark-welcome {
+  width: 68px;
+  height: 68px;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(27, 67, 54, 0.14);
+}
+
+.editor-header {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  min-height: 36px;
+  padding: 6px 14px;
+  background: var(--editor-surface);
+  border-bottom: 1px solid color-mix(in srgb, var(--border) 72%, transparent);
+  flex-shrink: 0;
+}
+
+.editor-header-text {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.editor-header-path {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-size: 12px;
+  line-height: 1.2;
+  font-family: var(--font-mono);
+  white-space: nowrap;
+}
+
+.editor-header-path-file {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.editor-view-toggle {
+  display: inline-flex;
+  height: 23px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.editor-view-toggle button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 23px;
+  min-width: 28px;
+  padding: 0 8px;
+  color: var(--muted-foreground);
+}
+
+.editor-view-toggle button[aria-pressed='true'],
+.editor-view-toggle button:hover {
+  background: var(--accent);
+  color: var(--foreground);
+}
+
+.editor-dirty {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.editor-dirty-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--status-warning);
+}
+
+.editor-shell {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--editor-surface);
+}
+
+.editor-surface-frame {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.rich-markdown-search[data-open='false'] {
+  display: none;
+}
+
+.rich-markdown-search-input {
+  border: none;
+  background: transparent;
+  outline: none;
+  padding: 4px 6px;
+}
+
+.rich-markdown-editor-shell {
+  position: relative;
+}
+
+.rich-markdown-editor-scroll {
+  min-height: 0;
+  flex: 1;
+  overflow: auto;
+}
+
+.rich-markdown-more {
+  position: relative;
+}
+
+.rich-markdown-more-menu {
+  position: absolute;
+  z-index: 40;
+  top: calc(100% + 6px);
+  right: 0;
+  display: flex;
+  width: 220px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--border) 76%, transparent);
+  border-radius: 6px;
+  background: var(--popover);
+  color: var(--popover-foreground);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+}
+
+.rich-markdown-editor-shell .rich-markdown-link-bubble {
+  position: absolute;
+  top: 46px;
+  left: 14px;
+}
+
+.rich-markdown-link-url {
+  border: none;
+  background: transparent;
+  outline: none;
+  min-width: 180px;
+}
+
+.rich-markdown-link-button {
+  padding: 0 6px;
+  font-size: 12px;
+  color: var(--muted-foreground);
+}
+
+.banner, .notice {
+  margin: 8px 14px 0;
+  padding: 8px 10px;
+  border-radius: 6px;
+  background: var(--accent);
+  color: var(--foreground);
+  font-size: 13px;
+}
+
+.banner.error, .error {
+  background: color-mix(in srgb, var(--destructive) 12%, white);
+  color: var(--destructive);
+}
+
+.front-matter {
+  margin: 12px 32px 0;
+  white-space: pre-wrap;
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+  border: 1px solid color-mix(in srgb, var(--border) 80%, transparent);
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.source-editor {
+  flex: 1;
+  width: 100%;
+  min-height: 0;
+  margin: 0;
+  border: none;
+  border-radius: 0;
+  resize: none;
+  padding: 24px 32px 96px;
+  background: var(--editor-surface);
+  color: var(--foreground);
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  outline: none;
+}
+
+.markdown-preview {
+  overflow: auto;
+}
+
+.callout-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+
+.empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px 64px;
+  text-align: center;
+  color: var(--muted-foreground);
+}
+
+.empty h1 {
+  margin: 18px 0 0;
+  color: var(--foreground);
+  font-size: 28px;
+  font-weight: 600;
+  letter-spacing: -0.03em;
+}
+
+.empty p {
+  max-width: 26rem;
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.empty-actions button {
+  min-width: 88px;
+  height: 32px;
+  padding: 0 16px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  color: var(--foreground);
+}
+
+.empty-actions button:first-child {
+  background: var(--foreground);
+  color: var(--background);
+  border-color: var(--foreground);
+}
+
+.empty-actions button:hover {
+  background: var(--accent);
+  color: var(--foreground);
+  border-color: var(--border);
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(10, 10, 10, 0.28);
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 8px;
+}
+
+.modal p {
+  background: var(--popover);
+  margin: 0;
+  padding: 16px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.12);
+}
+
+.modal button {
+  padding: 6px 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+}
