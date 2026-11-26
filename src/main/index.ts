@@ -7,6 +7,7 @@ import { message } from '../shared/messages'
 import { copyImageIntoDocument, readDocumentImage } from './image-files'
 import { createHandlers, type HandlerDeps } from './ipc-handlers'
 import { createMenuDispatcher } from './menu-target'
+import { allowWindowClose, attachWindowClose, canUseWindow } from './window-lifecycle'
 import { applyWindowGuards, APP_ORIGIN, webPreferences } from './window-host'
 import { writeFileAtomic } from './write-file-atomic'
 
@@ -36,6 +37,9 @@ function locale() {
 function dependencies(win: BrowserWindow): HandlerDeps {
   return {
     showOpen: async () => {
+      if (win.isDestroyed()) {
+        return null
+      }
       const result = await dialog.showOpenDialog(win, {
         properties: ['openFile'],
         filters: documentFilters
@@ -43,6 +47,9 @@ function dependencies(win: BrowserWindow): HandlerDeps {
       return result.canceled ? null : (result.filePaths[0] ?? null)
     },
     showSave: async () => {
+      if (win.isDestroyed()) {
+        return null
+      }
       const result = await dialog.showSaveDialog(win, {
         filters: documentFilters
       })
@@ -55,6 +62,9 @@ function dependencies(win: BrowserWindow): HandlerDeps {
     },
     writeAtomic: writeFileAtomic,
     confirm: async () => {
+      if (win.isDestroyed()) {
+        return 'cancel'
+      }
       const current = locale()
       const result = await dialog.showMessageBox(win, {
         type: 'warning',
@@ -70,6 +80,9 @@ function dependencies(win: BrowserWindow): HandlerDeps {
       clipboard.writeText(text)
     },
     pickImagePath: async () => {
+      if (win.isDestroyed()) {
+        return null
+      }
       const result = await dialog.showOpenDialog(win, {
         properties: ['openFile'],
         filters: imageFilters
@@ -85,14 +98,19 @@ function installMenu(): void {
   const current = locale()
   const dispatch = createMenuDispatcher(() => {
     const win = BrowserWindow.getFocusedWindow()
-    if (!win) {
+    if (!win || !canUseWindow(win)) {
       return null
     }
+    const contents = win.webContents
+    const windowId = win.id
     return {
-      id: win.id,
-      destroyed: win.isDestroyed(),
+      id: windowId,
+      destroyed: false,
       send: (command) => {
-        win.webContents.send('menu-command', command)
+        if (!canUseWindow(win)) {
+          return
+        }
+        contents.send('menu-command', command)
       }
     }
   })
@@ -138,20 +156,16 @@ function createWindow(initialPath?: string): BrowserWindow {
     webPreferences: webPreferences(join(appRoot(), 'dist', 'preload', 'index.cjs'))
   })
   const handlers = createHandlers(dependencies(win))
-  handlersByWebContents.set(win.webContents.id, handlers)
+  const webContentsId = attachWindowClose({
+    win,
+    closing,
+    onClosed: (id) => {
+      handlersByWebContents.delete(id)
+    }
+  })
+  handlersByWebContents.set(webContentsId, handlers)
   applyWindowGuards(win, (url) => {
     void shell.openExternal(url)
-  })
-  win.on('close', (event) => {
-    if (closing.has(win.webContents.id)) {
-      return
-    }
-    event.preventDefault()
-    win.webContents.send('menu-command', 'close')
-  })
-  win.on('closed', () => {
-    handlersByWebContents.delete(win.webContents.id)
-    closing.delete(win.webContents.id)
   })
   win.webContents.on('did-fail-load', (_event, code, description, url) => {
     console.error('did-fail-load', code, description, url)
@@ -160,9 +174,10 @@ function createWindow(initialPath?: string): BrowserWindow {
     if (initialPath) {
       setTimeout(() => {
         void handlers.openPath(initialPath).then((opened) => {
-          if (!win.isDestroyed()) {
-            win.webContents.send('open-from-os', opened satisfies OpenDocumentResult)
+          if (!canUseWindow(win)) {
+            return
           }
+          win.webContents.send('open-from-os', opened satisfies OpenDocumentResult)
         })
       }, 400)
     }
@@ -189,12 +204,14 @@ function registerIpc(): void {
   ipcMain.handle('writeClipboard', (event, text: string) => handlersFor(event.sender.id).writeClipboard(text))
   ipcMain.handle('confirmDiscard', (event) => handlersFor(event.sender.id).confirmDiscard())
   ipcMain.handle('closeWindow', (event) => {
+    if (event.sender.isDestroyed()) {
+      return
+    }
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win) {
       return
     }
-    closing.add(event.sender.id)
-    win.close()
+    allowWindowClose(closing, event.sender.id, win)
   })
 }
 
