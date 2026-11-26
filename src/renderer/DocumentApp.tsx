@@ -264,26 +264,28 @@ export function DocumentApp() {
       await settleClose('close')
       return
     }
-    document.getElementById('leafnote-find')?.focus()
+    document.dispatchEvent(new Event('leafnote-find'))
   }
 
   return (
     <main className="app">
       <header className="titlebar">
-        <strong>叶笺</strong>
-        <span>LeafNote</span>
-        <button type="button" onClick={() => void startNew()}>
-          {message(locale, 'new')}
-        </button>
-        <button type="button" onClick={() => void openDocument()}>
-          {message(locale, 'open')}
-        </button>
-        <button type="button" onClick={() => void save(false)}>
-          {message(locale, 'save')}
-        </button>
-        <button type="button" onClick={() => void saveAs()}>
-          {message(locale, 'save-as')}
-        </button>
+        <strong className="titlebar-app-name">叶笺</strong>
+        <span className="titlebar-product">LeafNote</span>
+        <div className="titlebar-actions">
+          <button type="button" className="titlebar-icon-button" onClick={() => void startNew()}>
+            {message(locale, 'new')}
+          </button>
+          <button type="button" className="titlebar-icon-button" onClick={() => void openDocument()}>
+            {message(locale, 'open')}
+          </button>
+          <button type="button" className="titlebar-icon-button" onClick={() => void save(false)}>
+            {message(locale, 'save')}
+          </button>
+          <button type="button" className="titlebar-icon-button" onClick={() => void saveAs()}>
+            {message(locale, 'save-as')}
+          </button>
+        </div>
       </header>
       {notice ? <p className={notice.tone === 'error' ? 'banner error' : 'notice'}>{notice.text}</p> : null}
       {session ? (

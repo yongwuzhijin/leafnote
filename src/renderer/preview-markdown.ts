@@ -47,6 +47,23 @@ const previewSchema: SanitizeOptions = {
   }
 }
 
+export const previewRemarkPlugins = [
+  remarkGfm,
+  remarkCjkFriendly,
+  remarkLeafNoteCallouts,
+  remarkBreaks,
+  remarkFrontmatter,
+  remarkMath
+]
+
+export const previewRehypePlugins = [
+  rehypeRaw,
+  [rehypeSanitize, previewSchema] as [typeof rehypeSanitize, SanitizeOptions],
+  rehypeSlug,
+  rehypeHighlight,
+  rehypeKatex
+]
+
 export function renderPreview(markdown: string): { status: 'ok'; html: string } | { status: 'too-large' } {
   if (new TextEncoder().encode(markdown).byteLength > MARKDOWN_PREVIEW_MAX_BYTES) {
     return { status: 'too-large' }
@@ -55,21 +72,8 @@ export function renderPreview(markdown: string): { status: 'ok'; html: string } 
     createElement(
       Markdown,
       {
-        remarkPlugins: [
-          remarkGfm,
-          remarkCjkFriendly,
-          remarkLeafNoteCallouts,
-          remarkBreaks,
-          remarkFrontmatter,
-          remarkMath
-        ],
-        rehypePlugins: [
-          rehypeRaw,
-          [rehypeSanitize, previewSchema],
-          rehypeSlug,
-          rehypeHighlight,
-          rehypeKatex
-        ],
+        remarkPlugins: previewRemarkPlugins,
+        rehypePlugins: previewRehypePlugins,
         urlTransform: (url) => url,
         components: {
           input: (props: ComponentProps<'input'>) => createElement('input', { ...props, disabled: true })

@@ -134,7 +134,7 @@ function createWindow(initialPath?: string): BrowserWindow {
     minWidth: 720,
     minHeight: 480,
     title: '叶笺',
-    backgroundColor: '#f6f3ea',
+    backgroundColor: '#ffffff',
     webPreferences: webPreferences(join(appRoot(), 'dist', 'preload', 'index.cjs'))
   })
   const handlers = createHandlers(dependencies(win))

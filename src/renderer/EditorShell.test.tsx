@@ -23,6 +23,22 @@ describe('EditorShell', () => {
     expect(screen.getByLabelText('未存储')).toBeTruthy()
   })
 
+  it('uses the icon toolbar instead of debug block chips', () => {
+    render(
+      <EditorShell
+        session={{ ...session, surface: 'rich', reason: null, buffer: '# Hi\n', baseline: '# Hi\n' }}
+        locale="zh"
+        onChange={vi.fn()}
+        onMode={vi.fn()}
+        onClose={vi.fn()}
+      />
+    )
+    expect(screen.queryByRole('button', { name: 'heading-1' })).toBeNull()
+    expect(screen.queryByRole('button', { name: 'mermaid-fence' })).toBeNull()
+    expect(screen.getByRole('button', { name: '标题 1' })).toBeTruthy()
+    expect(screen.getByRole('button', { name: '预览' })).toBeTruthy()
+  })
+
   it('does not change the buffer when preview is selected', () => {
     const onChange = vi.fn()
     const onMode = vi.fn()

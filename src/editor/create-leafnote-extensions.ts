@@ -8,12 +8,15 @@ import { TableHeader } from '@tiptap/extension-table-header'
 import { TableRow } from '@tiptap/extension-table-row'
 import TaskItem from '@tiptap/extension-task-item'
 import type { AnyExtension, Editor } from '@tiptap/core'
+import { ReactNodeViewRenderer } from '@tiptap/react'
 import { TextSelection } from '@tiptap/pm/state'
 import StarterKit from '@tiptap/starter-kit'
 import { common, createLowlight } from 'lowlight'
 import type { ImageReadResult } from '../shared/leafnote-api'
 import { classifyImageSrc } from '../renderer/image-display'
+import { LeafNoteCodeBlock } from './code-block-view'
 import { DragSelectionGuard } from './copied/drag-selection-guard'
+import { positionStableNodeViewUpdate } from './position-stable-node-view-update'
 import { createMarkdownTokenizerStart } from './copied/markdown-tokenizer-start'
 import {
   createRawMarkdownHtmlBlock,
@@ -76,7 +79,13 @@ export function createLeafNoteExtensions(input: {
     RichMarkdownParagraph,
     RichMarkdownTrailingParagraph,
     RichMarkdownCode,
-    RichMarkdownCodeBlockLowlight.configure({
+    RichMarkdownCodeBlockLowlight.extend({
+      addNodeView() {
+        return ReactNodeViewRenderer(LeafNoteCodeBlock, {
+          update: positionStableNodeViewUpdate
+        })
+      }
+    }).configure({
       lowlight,
       defaultLanguage: null
     }),
@@ -247,7 +256,7 @@ export function runSlashCommand(editor: Editor, id: LeafNoteSlashId, onPickImage
   }
 }
 
-function insertToggle(editor: Editor): void {
+export function insertToggle(editor: Editor): void {
   const insertAt = editor.state.selection.from
   editor
     .chain()
