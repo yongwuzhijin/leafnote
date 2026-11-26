@@ -1,9 +1,11 @@
 import { readFile, stat } from 'node:fs/promises'
 import { extname, join, normalize, sep } from 'node:path'
 import { app, BrowserWindow, clipboard, dialog, ipcMain, Menu, protocol, shell } from 'electron'
+import type { MenuItemConstructorOptions } from 'electron'
 import type { MenuCommand, OpenDocumentResult } from '../shared/leafnote-api'
 import { chooseLocale } from '../shared/locale'
 import { message } from '../shared/messages'
+import { createAppMenuTemplate } from './app-menu'
 import { copyImageIntoDocument, readDocumentImage } from './image-files'
 import { createHandlers, type HandlerDeps } from './ipc-handlers'
 import { createMenuDispatcher } from './menu-target'
@@ -116,32 +118,7 @@ function installMenu(): void {
   })
   const send = (command: MenuCommand) => dispatch(command)
   Menu.setApplicationMenu(
-    Menu.buildFromTemplate([
-      {
-        label: '叶笺',
-        submenu: [
-          { label: message(current, 'new'), accelerator: 'CmdOrCtrl+N', click: () => send('new') },
-          { label: message(current, 'open'), accelerator: 'CmdOrCtrl+O', click: () => send('open') },
-          { label: message(current, 'save'), accelerator: 'CmdOrCtrl+S', click: () => send('save') },
-          { label: message(current, 'save-as'), accelerator: 'CmdOrCtrl+Shift+S', click: () => send('save-as') },
-          { type: 'separator' },
-          { role: 'quit', label: current === 'zh' ? '退出叶笺' : 'Quit LeafNote' }
-        ]
-      },
-      {
-        label: current === 'zh' ? '编辑' : 'Edit',
-        submenu: [
-          { role: 'undo' },
-          { role: 'redo' },
-          { type: 'separator' },
-          { role: 'cut' },
-          { role: 'copy' },
-          { role: 'paste' },
-          { role: 'selectAll' },
-          { label: message(current, 'find'), accelerator: 'CmdOrCtrl+F', click: () => send('find') }
-        ]
-      }
-    ])
+    Menu.buildFromTemplate(createAppMenuTemplate(current, send) as MenuItemConstructorOptions[])
   )
 }
 

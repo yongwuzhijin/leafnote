@@ -76,6 +76,13 @@ button {
   user-select: none;
 }
 
+.titlebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
 .titlebar-app-name {
   font-size: 13px;
   font-weight: 600;
@@ -103,9 +110,40 @@ button {
   font-size: 12px;
 }
 
-.titlebar-icon-button:hover {
+.titlebar-action {
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: 6px;
+}
+
+.titlebar-icon-button:hover:not(:disabled) {
   background: var(--accent);
   color: var(--foreground);
+}
+
+.titlebar-icon-button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.leaf-mark {
+  display: block;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.leaf-mark-bar {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+}
+
+.leaf-mark-welcome {
+  width: 68px;
+  height: 68px;
+  border-radius: 16px;
+  box-shadow: 0 10px 24px rgba(27, 67, 54, 0.14);
 }
 
 .editor-header {
@@ -314,31 +352,55 @@ button {
 
 .empty {
   flex: 1;
-  display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px 64px;
+  text-align: center;
   color: var(--muted-foreground);
 }
 
 .empty h1 {
-  margin: 0;
+  margin: 18px 0 0;
   color: var(--foreground);
-  font-size: 1.4em;
+  font-size: 28px;
   font-weight: 600;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
 }
 
-.empty button {
-  margin: 0 4px;
-  padding: 6px 12px;
+.empty p {
+  max-width: 26rem;
+  margin: 8px 0 0;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.empty-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 22px;
+}
+
+.empty-actions button {
+  min-width: 88px;
+  height: 32px;
+  padding: 0 16px;
   border: 1px solid var(--border);
-  border-radius: 6px;
+  border-radius: 8px;
   color: var(--foreground);
 }
 
-.empty button:hover {
+.empty-actions button:first-child {
+  background: var(--foreground);
+  color: var(--background);
+  border-color: var(--foreground);
+}
+
+.empty-actions button:hover {
   background: var(--accent);
+  color: var(--foreground);
+  border-color: var(--border);
 }
 
 .modal {

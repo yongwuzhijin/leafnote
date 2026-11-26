@@ -1,11 +1,14 @@
 import { Editor } from '@tiptap/core'
-import { useEffect, useRef, useState } from 'react'
+import { FileOutput, FilePlus, FolderOpen, Save } from 'lucide-react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
+import leafLogo from '../../build/icon.png'
 import { createLeafNoteExtensions } from '../editor/create-leafnote-extensions'
 import { htmlRoundTripOk } from '../editor/html-round-trip'
 import { assembleSaveText } from '../editor/save-bytes'
 import type { FileStamp, MenuCommand, OpenDocumentResult } from '../shared/leafnote-api'
 import { chooseLocale, type LeafNoteLocale } from '../shared/locale'
 import { message } from '../shared/messages'
+import { commandHint } from '../shared/shortcuts'
 import { EditorShell } from './EditorShell'
 import { isDirty, openSession, withMode, type DocumentSession } from './document-session'
 import { createNewDocument } from './new-document'
@@ -29,6 +32,7 @@ export function DocumentApp() {
   const sessionRef = useRef(session)
   const draftRef = useRef(draft)
   const stampRef = useRef(stamp)
+  const runMenuRef = useRef<(command: MenuCommand) => void>(() => undefined)
   sessionRef.current = session
   draftRef.current = draft
   stampRef.current = stamp
@@ -42,7 +46,7 @@ export function DocumentApp() {
       applyOpen(result)
     })
     const stopMenu = api.onMenuCommand((command) => {
-      void runMenu(command)
+      void runMenuRef.current(command)
     })
     return () => {
       stopOpen()
@@ -264,27 +268,39 @@ export function DocumentApp() {
       await settleClose('close')
       return
     }
+    if (command === 'toggle-preview') {
+      const current = sessionRef.current
+      if (!current) {
+        return
+      }
+      setSession(withMode(current, current.mode === 'preview' ? 'edit' : 'preview'))
+      return
+    }
     document.dispatchEvent(new Event('leafnote-find'))
   }
+  runMenuRef.current = runMenu
 
   return (
     <main className="app">
       <header className="titlebar">
-        <strong className="titlebar-app-name">叶笺</strong>
-        <span className="titlebar-product">LeafNote</span>
+        <div className="titlebar-brand">
+          <img className="leaf-mark leaf-mark-bar" src={leafLogo} alt="" />
+          <strong className="titlebar-app-name">叶笺</strong>
+          <span className="titlebar-product">LeafNote</span>
+        </div>
         <div className="titlebar-actions">
-          <button type="button" className="titlebar-icon-button" onClick={() => void startNew()}>
-            {message(locale, 'new')}
-          </button>
-          <button type="button" className="titlebar-icon-button" onClick={() => void openDocument()}>
-            {message(locale, 'open')}
-          </button>
-          <button type="button" className="titlebar-icon-button" onClick={() => void save(false)}>
-            {message(locale, 'save')}
-          </button>
-          <button type="button" className="titlebar-icon-button" onClick={() => void saveAs()}>
-            {message(locale, 'save-as')}
-          </button>
+          <TitleAction label={message(locale, 'new')} hint={commandHint(message(locale, 'new'), 'new')} onClick={() => void startNew()}>
+            <FilePlus size={16} />
+          </TitleAction>
+          <TitleAction label={message(locale, 'open')} hint={commandHint(message(locale, 'open'), 'open')} onClick={() => void openDocument()}>
+            <FolderOpen size={16} />
+          </TitleAction>
+          <TitleAction label={message(locale, 'save')} hint={commandHint(message(locale, 'save'), 'save')} disabled={!session} onClick={() => void save(false)}>
+            <Save size={16} />
+          </TitleAction>
+          <TitleAction label={message(locale, 'save-as')} hint={commandHint(message(locale, 'save-as'), 'save-as')} disabled={!session} onClick={() => void saveAs()}>
+            <FileOutput size={16} />
+          </TitleAction>
         </div>
       </header>
       {notice ? <p className={notice.tone === 'error' ? 'banner error' : 'notice'}>{notice.text}</p> : null}
@@ -335,17 +351,35 @@ export function DocumentApp() {
   )
 }
 
+function TitleAction(props: { label: string; hint?: string; disabled?: boolean; onClick(): void; children: ReactNode }) {
+  return (
+    <button
+      type="button"
+      className="titlebar-icon-button titlebar-action"
+      title={props.hint ?? props.label}
+      aria-label={props.label}
+      disabled={props.disabled}
+      onClick={props.onClick}
+    >
+      {props.children}
+    </button>
+  )
+}
+
 function EmptyState(props: { locale: LeafNoteLocale; onNew(): void; onOpen(): void }) {
   return (
     <section className="empty">
+      <img className="leaf-mark leaf-mark-welcome" src={leafLogo} alt="" />
       <h1>叶笺</h1>
       <p>{message(props.locale, 'empty-hint')}</p>
-      <button type="button" onClick={props.onNew}>
-        {message(props.locale, 'new')}
-      </button>
-      <button type="button" onClick={props.onOpen}>
-        {message(props.locale, 'open')}
-      </button>
+      <div className="empty-actions">
+        <button type="button" onClick={props.onNew}>
+          {message(props.locale, 'new')}
+        </button>
+        <button type="button" onClick={props.onOpen}>
+          {message(props.locale, 'open')}
+        </button>
+      </div>
     </section>
   )
 }

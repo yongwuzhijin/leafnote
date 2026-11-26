@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Eye, Pencil } from 'lucide-react'
+import { Eye, Pencil, X } from 'lucide-react'
 import { extractFrontMatter, prependFrontMatter } from '../editor/markdown-frontmatter'
 import type { CloseChoice } from '../shared/leafnote-api'
 import type { LeafNoteLocale } from '../shared/locale'
 import { message, type MessageKey } from '../shared/messages'
+import { commandHint } from '../shared/shortcuts'
 import type { DocumentSession } from './document-session'
 import { findInDocument } from './find-in-document'
 import { FrontMatterBlock } from './FrontMatterBlock'
@@ -60,10 +61,22 @@ export function EditorShell(props: {
     <section className="editor-shell">
       <header className="editor-header">
         <div className="editor-view-toggle" role="group" aria-label={message(props.locale, 'edit')}>
-          <button type="button" aria-pressed={props.session.mode === 'edit'} aria-label={message(props.locale, 'edit')} onClick={() => props.onMode('edit')}>
+          <button
+            type="button"
+            aria-pressed={props.session.mode === 'edit'}
+            aria-label={message(props.locale, 'edit')}
+            title={commandHint(message(props.locale, 'edit'), 'toggle-preview')}
+            onClick={() => props.onMode('edit')}
+          >
             <Pencil size={13} />
           </button>
-          <button type="button" aria-pressed={props.session.mode === 'preview'} aria-label={message(props.locale, 'preview')} onClick={() => props.onMode('preview')}>
+          <button
+            type="button"
+            aria-pressed={props.session.mode === 'preview'}
+            aria-label={message(props.locale, 'preview')}
+            title={commandHint(message(props.locale, 'preview'), 'toggle-preview')}
+            onClick={() => props.onMode('preview')}
+          >
             <Eye size={13} />
           </button>
         </div>
@@ -78,8 +91,14 @@ export function EditorShell(props: {
             {message(props.locale, 'unsaved')}
           </span>
         ) : null}
-        <button type="button" className="titlebar-icon-button" onClick={() => props.onClose(null)}>
-          {message(props.locale, 'close')}
+        <button
+          type="button"
+          className="titlebar-icon-button titlebar-action"
+          aria-label={message(props.locale, 'close')}
+          title={commandHint(message(props.locale, 'close'), 'close')}
+          onClick={() => props.onClose(null)}
+        >
+          <X size={16} />
         </button>
       </header>
       {props.session.reason ? <p className="banner">{message(props.locale, reasonKey[props.session.reason])}</p> : null}

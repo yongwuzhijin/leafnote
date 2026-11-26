@@ -39,6 +39,19 @@ describe('EditorShell', () => {
     expect(screen.getByRole('button', { name: '预览' })).toBeTruthy()
   })
 
+  it('closes from an icon button whose hint includes the shortcut', () => {
+    const onClose = vi.fn()
+    render(<EditorShell session={session} locale="zh" onChange={vi.fn()} onMode={vi.fn()} onClose={onClose} />)
+    const close = screen.getAllByRole('button', { name: '关闭' }).find((button) => button.classList.contains('titlebar-action'))
+    if (!close) {
+      throw new Error('missing close button')
+    }
+    expect(close.getAttribute('title')).toBe('关闭（⌘W）')
+    expect(close.textContent?.trim()).toBe('')
+    fireEvent.click(close)
+    expect(onClose).toHaveBeenCalledOnce()
+  })
+
   it('does not change the buffer when preview is selected', () => {
     const onChange = vi.fn()
     const onMode = vi.fn()
